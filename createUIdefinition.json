@@ -1,0 +1,108 @@
+﻿{
+  "handler": "Microsoft.Compute.MultiVm",
+  "version": "0.0.1-preview",
+  "parameters": {
+    "basics": [{
+     "name": "clusterName",
+     "type": "Microsoft.Common.TextBox",
+     "label": "Virtual Machine name",
+     "toolTip": "The name of the new Virtual Machine.",
+     "constraints": {
+       "required": true,
+       "regex": "^[a-z0-9]{3,24}$",
+       "validationMessage": "Virtual Machine name must be between 3 and 24 characters long, and can contain only numbers and lowercase letters."
+     }
+    }, {
+      "name": "adminUsername",
+      "type": "Microsoft.Compute.UserNameTextBox",
+      "label": "Username",
+      "toolTip": "Admin username for the virtual machines.",
+      "osPlatform": "Linux"
+    }, {
+      "name": "adminPassword",
+      "type": "Microsoft.Common.PasswordBox",
+      "label": {
+        "password": "Password",
+        "confirmPassword": "Confirm password"
+      },
+      "toolTip": {
+        "password": "Admin password for the virtual machines."
+      },
+      "osPlatform": "Linux"
+      }],
+    "steps": [{
+      "name": "infrastructureConfig",
+      "label": "Veeam HUB settings",
+      "subLabel": {
+        "preValidation": "Veeam HUB settings",
+        "postValidation": "Done"
+      },
+      "bladeTitle": "Infrastructure settings",
+      "elements": [ {
+        "name": "storageAccount",
+        "type": "Microsoft.Network.VirtualNetworkCombo",
+        "label": "Virtual Network",
+        "tooTip":  "The virtual network Veeam HUB will be connected to."
+        },{
+        "name": "storageAccount",
+        "type": "Microsoft.Storage.StorageAccountSelector",
+        "label": "Storage account",
+        "defaultValue": {
+          "type": "Standard_LRS"
+        }
+        }, {
+        "name": "vmSize",
+        "type": "Microsoft.Compute.SizeSelector",
+        "label": "Virtual machine size",
+        "toolTip": "The size of the virtual machine for the domain controller.",
+        "recommendedSizes": [
+            "Standard_A0",
+            "Standard_A1"
+        ],
+        "constraints": {
+          "allowedSizes": [
+            "Standard_A0",
+            "Standard_A1"
+          ]
+        },
+        "osPlatform": "Linux",
+        "imageReference": {
+          "publisher": "Canonical",
+          "offer": "UbuntuServer",
+          "sku": "14.04.2-LTS"
+        }
+      }, {
+        "name": "dnsAndPublicIP",
+        "type": "Microsoft.Network.PublicIpAddressCombo",
+        "label": {
+          "publicIpAddress": "Public IP address",
+          "domainNameLabel": "DNS Prefix"
+        },
+        "toolTip": {
+          "domainNameLabel": "DNS Prefix for the VM public IP addresses."
+        },
+        "defaultValue": {
+          "publicIpAddressName": "publicIP"
+        },
+        "options": {
+          "hideNone": true
+        }
+      }]
+    }],
+    "outputs": {
+      "location": "[location()]",
+      "adminUsername": "[basics('adminUsername')]",
+      "adminPassword": "[basics('adminPassword')]",
+      "storageAccountNewOrExisting": "[steps('infrastructureConfig').storageAccount.newOrExisting]",
+      "StorageAccountName": "[steps('infrastructureConfig').storageAccount.name]",
+      "storageAccountType": "[steps('infrastructureConfig').storageAccount.type]",
+      "existingStorageAccountRG": "[steps('infrastructureConfig').storageAccount.resourceGroup]",
+      "domainName": "[steps('infrastructureConfig').domainName]",
+      "vmSize": "[steps('infrastructureConfig').vmSize]",
+      "publicIPAddressName": "[steps('infrastructureConfig').DnsAndPublicIP.name]",
+      "dnsNameForPublicIP": "[steps('infrastructureConfig').dnsAndPublicIP.domainNameLabel]",
+      "existingIPRGName": "[steps('infrastructureConfig').dnsAndPublicIP.resourceGroup]",
+      "publicIPNewOrExisting": "[steps('infrastructureConfig').dnsAndPublicIP.newOrExistingOrNone]"
+    }
+  }
+}
