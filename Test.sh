@@ -1,3 +1,4 @@
 #! /bin/sh
 
-touch /root/azurefile 
+touch /root/azurefile
+echo "Hello" > /root/azurefile
