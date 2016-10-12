@@ -1,0 +1,66 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "value": "myVnet"
+    },
+    "vNetNewOrExisting": {
+      "value": "new"
+    },
+    "vNetAddressPrefix": {
+      "value": "10.1.0.0/16"
+    },
+    "vNetSubnet1Prefix": {
+      "value": "10.1.1.0/24"
+    },
+    "vNetSubnet1Name": {
+      "value": "Subnet-1"
+    },
+    "adminUsername": {
+      "value": "cloudguy"
+    },
+    "vmName": {
+      "value": "myvm"
+    },
+    "newStorageAccountName": {
+      "value": "veveeamhubstorageacc"
+    },
+    "storageAccountType": {
+      "value": "Standard_LRS"
+    },
+    "storageAccountNewOrExisting": {
+      "value": "new"
+    },
+    "storageAccountExistingRG": {
+      "value": "existingRGname"
+    },
+    "publicIPAddressName": {
+      "value": "myPublicIP"
+    },
+    "publicIPNewOrExisting": {
+      "value": "new"
+    },
+    "publicIPExistingRGName": {
+      "value": "existingRGname"
+    },
+    "vNetNewOrExisting": {
+      "value": "new"
+    },
+    "baseUrl": {
+      "value": "https://raw.githubusercontent.com/veremin/New/master"
+    },
+    "publicIPDnsname": {
+        "value": "vepublicdnsname"
+    },
+      "nsgName": {
+          "value": "VeeamHubNSG"
+      },
+      "routeTableName": {
+          "value": "VeeamHubRouteTable"
+      },
+      "staticPrivateIP": {
+          "value": "10.1.1.7"
+      }
+  }
+}

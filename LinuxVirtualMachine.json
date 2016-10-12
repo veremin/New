@@ -1,0 +1,434 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmName": {
+            "type": "string",
+            "defaultValue": "VeeamHub",
+            "metadata": {
+                "description": "Name for the Virtual Machine."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "User name for the Virtual Machine."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the Virtual Machine."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "defaultValue": "veeamHubNetwork",
+            "metadata": {
+                "description": "Name for the vNet."
+            }
+        },
+        "vNetNewOrExisting": {
+            "type": "string",
+            "defaultValue": "new",
+            "allowedValues": [
+                "new",
+                "existing"
+            ],
+            "metadata": {
+                "description": "Identifies whether existing or new Virtual Network should be used."
+            }
+        },
+        "vNetExistingRGName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Resource Group that contains existing storage account."
+            }
+        },
+        "vNetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "vNet Address Prefix."
+            }
+        },
+        "vNetSubnet1Name": {
+            "type": "string",
+            "defaultValue": "Subnet1",
+            "metadata": {
+                "description": "vNet Subnet1 name."
+            }
+        },
+        "vNetSubnet1Prefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "vNet Subnet1 Prefix."
+            }
+        },
+        "nsgName": {
+            "type": "string",
+            "defaultValue": "VeeamHubNSG",
+            "metadata": {
+                "description": "Network Security Group for the Virtual Machine."
+            }
+        },
+        "routeTableName": {
+            "type": "string",
+            "defaultValue": "VeeamHubRouteTable",
+            "metadata": {
+                "description": "Route table for the Network Security Group."
+            }
+        },
+        "storageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS"
+            ],
+            "metadata": {
+                "description": "Type of storage account created"
+            }
+        },
+        "storageAccountNewOrExisting": {
+            "type": "string",
+            "defaultValue": "new",
+            "allowedValues": [
+                "new",
+                "existing"
+            ],
+            "metadata": {
+                "description": "Identifies whether existing or new Storage Account should be used."
+            }
+        },
+        "newStorageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name for Storage Account where Veeam HUB will be placed."
+            }
+        },
+        "storageAccountExistingRG": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Resource Group that contains existing storage account."
+            }
+        },
+        "publicIPAddressName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Public IP Address Name"
+            }
+        },
+        "publicIPDnsname": {
+            "type": "string",
+            "defaultValue": "veeamhubpublicip",
+            "metadata": {
+                "description": "Globally unique DNS Name for the Public IP used to access the Virtual Machine."
+            }
+        },
+        "publicIPNewOrExisting": {
+            "type": "string",
+            "defaultValue": "new",
+            "allowedValues": [
+                "new",
+                "existing"
+            ],
+            "metadata": {
+                "description": "Indicates whether new or existing public IP should be used."
+            }
+        },
+        "publicIPExistingRGName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Resource Group that contains existing public IP."
+            }
+        },
+        "staticPrivateIP": {
+            "type": "string",
+            "defaultValue": "10.1.1.7",
+            "metadata": {
+                "description": "Static Private IP for the Virtual Machine."
+            }
+        },
+        "ubuntuOSVersion": {
+            "type": "string",
+            "defaultValue": "14.04.2-LTS",
+            "allowedValues": [
+                "12.04.5-LTS",
+                "14.04.2-LTS"
+            ],
+            "metadata": {
+                "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version. Allowed values: 12.04.5-LTS, 14.04.2-LTS, 15.04."
+            }
+        },
+        "baseUrl": {
+            "type": "string",
+            "metadata": {
+                "artifactsBaseUrl": "",
+                "description": "URL to retrieve nested templates"
+            },
+            "defaultValue": "https://raw.githubusercontent.com/veremin/New/master"
+        }
+    },
+    "variables": {
+        "imagePublisher": "Canonical",
+        "imageOffer": "UbuntuServer",
+        "OSDiskName": "[concat(parameters('vmName'),'-disk')]",
+        "nicName": "[concat(parameters('vmName'),'-eth0')]",
+        "addressPrefix": "[parameters('vNetAddressPrefix')]",
+        "publicIPAddressType": "Static",
+        "vmStorageAccountContainerName": "vhds",
+        "vmSize": "Standard_A0",
+        "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('vNetSubnet1Name'))]",
+        "storageAccountSetupURL": "[concat(parameters('baseUrl'),'/storageAccount-',parameters('storageAccountNewOrExisting'),'.json')]",
+        "vNetSetupURL": "[concat(parameters('baseUrl'),'/vnet-',parameters('vNetNewOrExisting'),'.json')]",
+        "publicIPSetupURL": "[concat(parameters('baseUrl'),'/publicip-',parameters('publicIPNewOrExisting'),'.json')]",
+        "apiVer": "2015-06-15"
+    },
+    "resources": [
+        {
+            "name": "SettingUpStorageAccount",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('storageAccountSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "storageAccountType": {
+                        "value": "[parameters('storageAccountType')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('newStorageAccountName')]"
+                    },
+                    "storageAccountExistingRG": {
+                        "value": "[parameters('storageAccountExistingRG')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "SettingUpPublicIP",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('publicIPSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "publicIPAddressName": {
+                        "value": "[parameters('publicIPAddressName')]"
+                    },
+                    "publicIPAddressType": {
+                        "value": "[variables('publicIPAddressType')]"
+                    },
+                    "dnsPrefix": {
+                        "value": "[parameters('publicIPDnsName')]"
+                    },
+                    "publicIpRGName": {
+                        "value": "[parameters('publicIPExistingRGName')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "SettingUpVirtualNetwork",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vNetSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "vNetAddressPrefix": {
+                        "value": "[parameters('vNetAddressPrefix')]"
+                    },
+                    "vNetSubnet1Name": {
+                        "value": "[parameters('vNetSubnet1Name')]"
+                    },
+                    "vNetSubnet1Prefix": {
+                        "value": "[parameters('vNetSubnet1Prefix')]"
+                    },
+                    "vnetExistingRGName": {
+                        "value": "[parameters('vnetExistingRGName')]"
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVer')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "NetworkInterface"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'SettingUpPublicIP')]",
+                "[concat('Microsoft.Resources/deployments/', 'SettingUpVirtualNetwork')]",
+                "[concat('Microsoft.Network/networkSecurityGroups/', parameters('nsgName'))]"
+            ],
+            "properties": {
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('nsgName'))]"
+                },
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "enableIPForwarding": true,
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('staticPrivateIP')]",
+                            "publicIPAddress": {
+                                "id": "[reference('Microsoft.Resources/deployments/SettingUpPublicIp', '2015-01-01').outputs.publicIpId.value]"
+                            },
+                            "subnet": {
+                                "id": "[reference('Microsoft.Resources/deployments/SettingUpVirtualNetwork', '2015-01-01').outputs.subnetRef.value]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVer')]",
+            "type": "Microsoft.Network/routeTables",
+            "name": "[parameters('routeTableName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "Hub - RouteTable"
+            },
+            "properties": {
+                "routes": [ ]
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVer')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[parameters('nsgName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "VeeamHUB - NSG"
+            },
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "SSH-rule",
+                        "properties": {
+                            "description": "Allow SSH",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "Internet-rule",
+                        "properties": {
+                            "description": "Allow HTTP",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVer')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "VirtualMachine"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'settingUpStorageAccount')]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('imagePublisher')]",
+                        "offer": "[variables('imageOffer')]",
+                        "sku": "[parameters('ubuntuOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[variables('OSDiskName')]",
+                        "vhd": {
+                            "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/vhds/', variables('OSDiskName'), '-', uniquestring(resourceGroup().id), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "name": "LinuxCSExtension",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "[variables('apiver')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+                    ],
+                    "tags": {
+                        "displayName": "LinuxCSExtension"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.OSTCExtensions",
+                        "type": "CustomScriptForLinux",
+                        "typeHandlerVersion": "1.5",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [ 
+                                "https://raw.githubusercontent.com/veremin/New/master/Test.sh"
+                            ],
+                            "commandToExecute": "[concat('sh Test.sh', ' ', '[resourceGroup().name]')]"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
