@@ -5,4 +5,4 @@ SubnetPrefix=$3
 touch /root/azurefile
 echo "'$GroupName'" >> /root/azurefile
 echo "'$RouteTableName'" >> /root/azurefile
-echo "'SubnetPrefix'" >> /root/azurefile
+echo "'$SubnetPrefix'" >> /root/azurefile
