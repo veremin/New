@@ -1,0 +1,137 @@
+﻿{
+    "handler": "Microsoft.Compute.MultiVm",
+    "version": "0.0.1-preview",
+    "parameters": {
+        "basics": [
+            {
+                "name": "vmName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Virtual Machine name",
+                "toolTip": "The name of the new Virtual Machine.",
+                "constraints": {
+                    "required": true,
+                    "regex": "^[a-z0-9]{3,24}$",
+                    "validationMessage": "Virtual Machine name must be between 3 and 24 characters long, and can contain only numbers and lowercase letters."
+                }
+            },
+            {
+                "name": "adminUsername",
+                "type": "Microsoft.Compute.UserNameTextBox",
+                "label": "User name",
+                "toolTip": "Admin user name for the Veeam HUB virtual machine.",
+                "osPlatform": "Linux"
+            },
+            {
+                "name": "adminPassword",
+                "type": "Microsoft.Common.PasswordBox",
+                "label": {
+                    "password": "Password",
+                    "confirmPassword": "Confirm password"
+                },
+                "toolTip": {
+                    "password": "Admin password for the Veeam HUB virtual machine."
+                },
+                "osPlatform": "Linux"
+            },
+            {
+                "name": "serviceAccountname",
+                "type": "Microsoft.Compute.UserNameTextBox",
+                "label": "Service account user name",
+                "toolTip": "User name of existing Azure AD account which has Network Contributor access-level to User-defined routing table.",
+                "osPlatform": "Linux"
+            },
+            {
+                "name": "serviceAccountpassword",
+                "type": "Microsoft.Common.PasswordBox",
+                "label": {
+                    "password": "Service account password",
+                    "confirmPassword": "Confirm password"
+                },
+                "toolTip": {
+                    "password": "Password of existing Azure AD account which has Network Contributor access-level to User-defined routing table."
+                },
+                "osPlatform": "Linux"
+            }
+        ],
+        "steps": [
+            {
+                "name": "infrastructureConfig",
+                "label": "Veeam HUB settings",
+                "subLabel": {
+                    "preValidation": "Configure the Veeam HUB settings",
+                    "postValidation": "Done"
+                },
+                "bladeTitle": "Veeam HUB settings",
+                "elements": [
+                    {
+                        "name": "vmSize",
+                        "type": "Microsoft.Compute.SizeSelector",
+                        "label": "Virtual machine size",
+                        "toolTip": "The size of the virtual machine to deploy.",
+                        "recommendedSizes": [
+                            "Standard_A0",
+                            "Standard_A1"
+                        ],
+                        "constraints": {
+                            "allowedSizes": [
+                                "Standard_A0",
+                                "Standard_A1",
+                                "Standard_A3" 
+                            ]
+                        },
+                        "osPlatform": "Linux",
+                        "imageReference": {
+                            "publisher": "Canonical",
+                            "offer": "UbuntuServer",
+                            "sku": "14.04.2-LTS"
+                        }
+                    },
+                    {
+                        "name": "storageAccount",
+                        "type": "Microsoft.Storage.StorageAccountSelector",
+                        "label": "Storage account",
+                        "toolTip": "The storage account for the Veeam HUB Virtual Machine.",
+                        "defaultValue": {
+                            "type": "Standard_LRS"
+                        }
+                    },
+                    {
+                        "name": "dnsAndPublicIP",
+                        "type": "Microsoft.Network.PublicIpAddressCombo",
+                        "label": {
+                            "publicIpAddress": "Public IP address",
+                            "domainNameLabel": "DNS label"
+                        },
+                        "toolTip": {
+                            "publicIpAddress": "The public IP address for Veeam HUB Virtual Machine.",
+                            "domainNameLabel": "The DNS label for Veeam HUB Virtual Machine's public IP address."
+                        },
+                        "defaultValue": {
+                            "publicIpAddressName": "publicIP"
+                        },
+                        "options": {
+                            "hideNone": true
+                        }
+                    }
+                ]
+            }
+        ],
+        "outputs": {
+            "location": "[location()]",
+            "adminUsername": "[basics('adminUsername')]",
+            "adminPassword": "[basics('adminPassword')]",
+            "storageAccountNewOrExisting": "[steps('infrastructureConfig').storageAccount.newOrExisting]",
+            "StorageAccountName": "[steps('infrastructureConfig').storageAccount.name]",
+            "storageAccountType": "[steps('infrastructureConfig').storageAccount.type]",
+            "existingStorageAccountRG": "[steps('infrastructureConfig').storageAccount.resourceGroup]",
+            "domainName": "[steps('infrastructureConfig').domainName]",
+            "vmSize": "[steps('infrastructureConfig').vmSize]",
+            "publicIPAddressName": "[steps('infrastructureConfig').DnsAndPublicIP.name]",
+            "dnsNameForPublicIP": "[steps('infrastructureConfig').dnsAndPublicIP.domainNameLabel]",
+            "existingIPRGName": "[steps('infrastructureConfig').dnsAndPublicIP.resourceGroup]",
+            "publicIPNewOrExisting": "[steps('infrastructureConfig').dnsAndPublicIP.newOrExistingOrNone]",
+            "serviceAccountname": "[basics('serviceAccountname')]",
+            "serviceAccountpassword": "[basics('serviceAccountpassword')]"
+        }
+    }
+}
