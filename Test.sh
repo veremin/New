@@ -13,11 +13,12 @@ userOU=$11
 certName=$12
 certValidity=$13
 dhBits=$14
-siteEnabled=$15
-siteProtocol=$16
-sitePort=$17
-endpointEnabled=$18
-endpointProtocol=$19
-endpointPort=$20
+publicIP=$15
+siteEnabled=$16
+siteProtocol=$17
+sitePort=$18
+endpointEnabled=$19
+endpointProtocol=$20
+endpointPort=$21
 touch /root/azurefile
-echo '{"resGroup":"'$resGroup'","routingTable":"'$routingTable'","subnetAddr":"'$subnetAddr'","accName":"'$accName'","accPwd":"'$accPwd'","userCountry":"'$userCountry'","userProvince":"'$userProvince'","userCity":"'$userCity'","userCompany":"'$userCompany'","userEmail":"'$userEmail'","userOU":"'$userOU'","certName":"'$certName'","certValidity":"'$certValidity'","dhBits":"'$dhBits'","siteEnabled":"'$siteEnabled'","siteProtocol":"'$sitePort'","endpointEnabled":"'$endpointEnabled'","endpointProtocol":"'$endpointProtocol'","endpointPort":"'$endpointPort'"}' >> /root/azurefile
+echo '{"azure":{,"resGroup":"'$resGroup'","routingTable":"'$routingTable'","subnetAddr":"'$subnetAddr'","accName":"'$accName'","accPwd":"'$accPwd'"},"ca":{"userCountry":"'$userCountry'","userProvince":"'$userProvince'","userCity":"'$userCity'","userCompany":"'$userCompany'","userEmail":"'$userEmail'","userOU":"'$userOU'","certName":"'$certName'","certValidity":"'$certValidity'","dhBits":"'$dhBits'"},"publicIP":"'$publicIP'","vpn":{"siteEnabled":"'$siteEnabled'","siteProtocol":"'$sitePort'","endpointEnabled":"'$endpointEnabled'","endpointProtocol":"'$endpointProtocol'","endpointPort":"'$endpointPort'"}}' >> /root/azurefile
